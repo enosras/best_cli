@@ -2,7 +2,6 @@ use chrono::{DateTime, Utc};
 use clap::Parser;
 use owo_colors::OwoColorize;
 use std::{
-    fmt::format,
     fs,
     path::{Path, PathBuf},
 };
@@ -12,13 +11,13 @@ use tabled::{
     Table, Tabled,
 };
 
-#[derive(Debug, Display)]
+#[derive(Debug, Display, Serialize)]
 enum EntryType {
     File,
     Dir,
 }
 
-#[derive(Debug, Tabled)]
+#[derive(Debug, Tabled, Serialize)]
 struct FileEntry {
     #[tabled{rename="Name"}]
     name: String,
@@ -33,6 +32,8 @@ struct FileEntry {
 
 struct Cli {
     path: Option<PathBuf>,
+    #[arg(short, long)]
+    json: bool,
 }
 
 fn main() {
@@ -42,21 +43,30 @@ fn main() {
 
     if let Ok(does_exist) = fs::exists(&path) {
         if does_exist {
+            if cli.json {
+                let get_files = get_files(&path);
+                println!(
+                    "{}",
+                    serde_json::to_string(&get_files).unwrap_or("caanot parse".to_string())
+                );
+            } else {
+                tab_name(path);
+            }
             // 3   for file in get_files(&path) {
             //        println!("{:?}", file)
             //    }
-            let get_files = get_files(&path);
-            let mut cli_table = Table::new(get_files);
-            cli_table.with(Style::rounded());
-            cli_table.modify(Columns::first(), Color::FG_BRIGHT_BLUE);
+            //  let get_files = get_files(&path);
+            //   let mut cli_table = Table::new(get_files);
+            //   cli_table.with(Style::rounded());
+            //    cli_table.modify(Columns::first(), Color::FG_BRIGHT_BLUE);
             //cli_table.modify(Columns::first(), Color::FG_BRIGHT_BLUE);
             // you can include a forloop to clear the matter
             //         cli_table.with(Style::rounded);
             //      cli_table.modify(Columns::first(), Alignment::right());
-            println!("{}", cli_table)
+            //   println!("{}", cli_table)
 
-        //for filw in get files{
-        // println!("{:?}", cli_table)}
+            //for filw in get files{
+            // println!("{:?}", cli_table)}
         } else {
             println!("{}", "path does not exist".red())
         }
@@ -78,6 +88,14 @@ fn get_files(path: &Path) -> Vec<FileEntry> {
     }
     // why is this value appended at the end of a rust function
     data
+}
+
+fn tab_name(path: PathBuf) {
+    let get_files = get_files(&path);
+    let mut cli_table = Table::new(get_files);
+    cli_table.with(Style::rounded());
+    cli_table.modify(Columns::first(), Color::FG_BRIGHT_BLUE);
+    println!("{}", cli_table)
 }
 
 fn mapdata(file: fs::DirEntry, data: &mut Vec<FileEntry>) {
