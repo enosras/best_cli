@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use clap::Parser;
 use owo_colors::OwoColorize;
+use serde::Serialize;
 use std::{
     fs,
     path::{Path, PathBuf},
